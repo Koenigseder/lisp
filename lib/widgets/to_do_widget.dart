@@ -1,24 +1,22 @@
 import 'package:flutter/material.dart';
 
-class TodoWidget extends StatelessWidget {
-  const TodoWidget(
-      {Key? key,
-      required this.toDoId,
-      required this.text,
-      required this.isDone,
-      required this.updateToDoDone,
-      required this.updateToDoTitle,
-      required this.deleteToDo})
-      : super(key: key);
+class TodoWidget extends StatefulWidget {
+  TodoWidget({
+    Key? key,
+    required this.todo,
+    required this.updateToDo,
+    required this.deleteToDo,
+  }) : super(key: key);
 
-  final int toDoId;
-  final String text;
-  final bool isDone;
-
-  final Function updateToDoDone;
-  final Function updateToDoTitle;
+  Map<String, dynamic> todo;
+  final Function updateToDo;
   final Function deleteToDo;
 
+  @override
+  State<TodoWidget> createState() => _TodoWidgetState();
+}
+
+class _TodoWidgetState extends State<TodoWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -30,37 +28,42 @@ class TodoWidget extends StatelessWidget {
             height: 25.0,
             margin: const EdgeInsets.only(right: 16.0),
             decoration: BoxDecoration(
-                color: isDone ? const Color(0xFF7349FE) : Colors.transparent,
+                color: widget.todo["done"]
+                    ? const Color(0xFF7349FE)
+                    : Colors.transparent,
                 borderRadius: BorderRadius.circular(7.0),
-                border: isDone
+                border: widget.todo["done"]
                     ? null
                     : Border.all(color: const Color(0xFF86829D), width: 1.5)),
             child: InkWell(
               onTap: () {
-                updateToDoDone(toDoId, isDone ? 1 : 0);
+                setState(() {
+                  widget.todo["done"] = !widget.todo["done"];
+                  widget.updateToDo(widget.todo, true);
+                });
               },
               customBorder: const CircleBorder(),
               child: Icon(
                 Icons.check,
-                color: isDone ? Colors.white : Colors.transparent,
+                color: widget.todo["done"] ? Colors.white : Colors.transparent,
                 size: 20.0,
               ),
             ),
           ),
           Expanded(
-              child: TextField(
-            controller: TextEditingController()..text = text,
-            onSubmitted: (String value) {
-              if (value.isNotEmpty) {
-                updateToDoTitle(toDoId, value);
-              }
-            },
-            decoration: const InputDecoration(
-                hintText: "Please enter a text...", border: InputBorder.none),
-          )),
+            child: TextField(
+              controller: TextEditingController()..text = widget.todo["title"],
+              onChanged: (String value) {
+                widget.todo["title"] = value;
+                widget.updateToDo(widget.todo, false);
+              },
+              decoration: const InputDecoration(
+                  hintText: "Please enter a text...", border: InputBorder.none),
+            ),
+          ),
           InkWell(
             onTap: () {
-              deleteToDo(toDoId);
+              widget.deleteToDo(widget.todo["id"]);
             },
             customBorder: const CircleBorder(),
             child: const Icon(

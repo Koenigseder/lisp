@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:lisp/widgets/task_list.dart';
+import 'package:lisp/widgets/homepage_wigdet.dart';
+import 'package:lisp/widgets/settingspage_widget.dart';
 
-class Homepage extends StatefulWidget {
-  const Homepage({Key? key}) : super(key: key);
+class Mainpage extends StatefulWidget {
+  const Mainpage({Key? key}) : super(key: key);
 
   @override
-  State<Homepage> createState() => _HomepageState();
+  State<Mainpage> createState() => _MainpageState();
 }
 
-class _HomepageState extends State<Homepage> {
-
+class _MainpageState extends State<Mainpage> {
   int _selectedIndex = 0;
 
   static const List<Widget> _widgetOptions = [
-    TaskListWidget(),
-    Text("Settings") // So far only a placeholder for the initial version
+    HomePageWidget(),
+    SettingsPageWidget(),
   ];
 
   void _onItemTapped(int index) {
@@ -40,7 +40,7 @@ class _HomepageState extends State<Homepage> {
             icon: Icon(Icons.settings),
             label: "Settings",
             backgroundColor: Colors.green,
-          )
+          ),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.deepPurple,
