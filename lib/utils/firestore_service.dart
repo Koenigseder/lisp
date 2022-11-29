@@ -1,0 +1,120 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:lisp/models/firestore_task.dart';
+
+import '../models/firestore_user.dart';
+
+class FirestoreService {
+  // Begin user methods
+
+  Stream<FirestoreUser?> readUser() {
+    final snapshots = FirebaseFirestore.instance
+        .collection("users")
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .snapshots();
+
+    return snapshots
+        .map((snapshot) => FirestoreUser.fromJson(snapshot.data()!));
+  }
+
+  Future createUser({required String name}) async {
+    final docUser = FirebaseFirestore.instance
+        .collection("users")
+        .doc(FirebaseAuth.instance.currentUser!.uid);
+
+    final firestoreUser = FirestoreUser(
+      name: name,
+      tasks: [],
+    );
+
+    final json = firestoreUser.toJson();
+
+    await docUser.set(json);
+  }
+
+  Future updateUser({required Map<String, dynamic> data}) async {
+    final docUser = FirebaseFirestore.instance
+        .collection("users")
+        .doc(FirebaseAuth.instance.currentUser!.uid);
+
+    await docUser.update(data);
+
+    // Update field: "<field_name>": "<new_value>"
+    // Update nested field: "<field_name0>.<field_name1>": "<new_value>"
+    // Delete field: "<field_name>": FieldValue.delete()
+  }
+
+  Future deleteDoc(
+      {required String collectionId, required String docId}) async {
+    final docRef =
+        FirebaseFirestore.instance.collection(collectionId).doc(docId);
+
+    await docRef.delete();
+  }
+
+  // End user methods
+
+  // Begin task methods
+
+  Stream<List<FirestoreTask>> getTasks(List<String> tasks) {
+    if (tasks.isEmpty) return const Stream.empty();
+
+    return FirebaseFirestore.instance
+        .collection("tasks")
+        .where(FieldPath.documentId, whereIn: tasks)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => FirestoreTask.fromJson(doc.data()))
+            .toList());
+  }
+
+  Future createTask({
+    required String title,
+    String? description,
+    List<dynamic>? todos,
+    List<dynamic>? changelog,
+  }) async {
+    final docTask = FirebaseFirestore.instance.collection("tasks").doc();
+
+    final firestoreTask = FirestoreTask(
+      id: docTask.id,
+      title: title,
+      description: description,
+      todos: todos,
+      changelog: changelog,
+    );
+
+    final json = firestoreTask.toJson();
+
+    await docTask.set(json);
+
+    return docTask.id;
+  }
+
+  Future updateTask({required Map<String, dynamic> data}) async {
+    final docUser =
+        FirebaseFirestore.instance.collection("tasks").doc(data["id"]);
+
+    await docUser.update(data);
+
+    // Update field: "<field_name>": "<new_value>"
+    // Update nested field: "<field_name0>.<field_name1>": "<new_value>"
+    // Delete field: "<field_name>": FieldValue.delete()
+  }
+
+  Future<bool> checkIfTaskExists(String taskId) async {
+    bool docExists = false;
+
+    final docRef = FirebaseFirestore.instance.collection("tasks").doc(taskId);
+
+    await docRef.get().then((docSnapshot) {
+      if (docSnapshot.exists) {
+        docExists = true;
+      }
+    });
+
+    return docExists;
+  }
+
+  // End task methods
+}

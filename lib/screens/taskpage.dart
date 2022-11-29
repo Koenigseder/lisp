@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:lisp/utils/database_helper.dart';
-import 'package:lisp/models/task.dart';
-import 'package:lisp/models/todo.dart';
+import 'package:flutter/services.dart';
+import 'package:lisp/models/firestore_task.dart';
+import 'package:lisp/utils/firestore_service.dart';
+import 'package:lisp/utils/utils.dart';
 
 import '../utils/no_glow_behavior.dart';
 import '../widgets/to_do_widget.dart';
@@ -9,191 +11,204 @@ import '../widgets/to_do_widget.dart';
 class Taskpage extends StatefulWidget {
   const Taskpage({Key? key, required this.task}) : super(key: key);
 
-  final TaskWithToDos? task;
+  final FirestoreTask? task;
 
   @override
   State<Taskpage> createState() => _TaskpageState();
 }
 
 class _TaskpageState extends State<Taskpage> {
-  final DatabaseHelper _dbHelper = DatabaseHelper();
+  final FirestoreService _firestoreService = FirestoreService();
 
-  int _taskId = 0;
-  String _taskTitle = "";
-  String _taskDescription = "";
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _descController = TextEditingController();
+  final TextEditingController _toDoController = TextEditingController();
 
   late FocusNode _titleFocus, _descriptionFocus, _toDoFocus;
 
-  bool _contentVisible = false;
+  final formKey = GlobalKey<FormState>();
+
+  List<dynamic> _todos = [];
+  List<dynamic> _changelog = [];
 
   @override
   void initState() {
-    if (widget.task != null) {
-      // Set visibility to true
-      _contentVisible = true;
+    super.initState();
 
-      _taskId = widget.task?.id ?? 0;
-      _taskTitle = widget.task?.title ?? "";
-      _taskDescription = widget.task?.description ?? "";
-    }
+    _titleController.text = widget.task?.title ?? "";
+    _descController.text = widget.task?.description ?? "";
+    _todos = widget.task?.todos ?? [];
+    _changelog = widget.task?.changelog ?? [];
+
+    _titleController.addListener(() {
+      setState(() {});
+    });
+
+    _descController.addListener(() {
+      setState(() {});
+    });
 
     _titleFocus = FocusNode();
     _descriptionFocus = FocusNode();
     _toDoFocus = FocusNode();
-
-    super.initState();
   }
 
   @override
   void dispose() {
+    super.dispose();
+
+    _titleController.dispose();
+    _descController.dispose();
+    _toDoController.dispose();
+
     _titleFocus.dispose();
     _descriptionFocus.dispose();
     _toDoFocus.dispose();
-
-    super.dispose();
   }
 
-  void _updateToDoDone(int toDoId, int isDone) async {
-    if (isDone == 0) {
-      await _dbHelper.updateToDoDone(toDoId, 1);
-    } else {
-      await _dbHelper.updateToDoDone(toDoId, 0);
+  void _updateToDo(Map<String, dynamic> newToDo, bool updateDone) async {
+    final int index = _todos.indexWhere((todo) => todo["id"] == newToDo["id"]);
+    _todos[index] = newToDo;
+
+    if (updateDone) {
+      await _firestoreService.updateTask(data: {
+        "id": widget.task?.id ?? "0",
+        "title": _titleController.text.trim(),
+        "description": _descController.text.trim(),
+        "todos": _todos,
+        "changelog": _changelog,
+      });
     }
-    setState(() {});
   }
 
-  void _updateToDoTitle(int toDoId, String newTitle) async {
-    await _dbHelper.updateToDoTitle(toDoId, newTitle);
-    setState(() {});
-  }
-
-  void _deleteToDo(int toDoId) async {
-    if (toDoId != 0) {
-      await _dbHelper.deleteToDo(toDoId);
-    }
-    setState(() {});
+  void _deleteToDo(int toDoId) {
+    setState(() {
+      final int index = _todos.indexWhere((todo) => todo["id"] == toDoId);
+      _todos.removeAt(index);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 24.0, bottom: 6.0),
-              child: Row(
-                children: [
-                  InkWell(
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                    customBorder: const CircleBorder(),
-                    child: const Padding(
-                      padding: EdgeInsets.all(24.0),
-                      child: Icon(
-                        Icons.keyboard_backspace,
-                        size: 27.0,
+        child: Form(
+          key: formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(
+                  top: 24.0,
+                  bottom: 6.0,
+                ),
+                child: Row(
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                      customBorder: const CircleBorder(),
+                      child: const Padding(
+                        padding: EdgeInsets.all(24.0),
+                        child: Icon(
+                          Icons.keyboard_backspace,
+                          size: 27.0,
+                        ),
                       ),
                     ),
-                  ),
-                  Expanded(
-                      child: TextField(
+                    Expanded(
+                      child: TextFormField(
                         focusNode: _titleFocus,
-                        onSubmitted: (value) async {
-                          // Check if the field is not empty
-                          if (value != "") {
-                            // Check if the task is null
-                            if (widget.task == null) {
-                                Task newTask = Task(title: value);
-                                _taskId = await _dbHelper.createTask(newTask);
-                                setState(() {
-                                   _contentVisible = true;
-                                   _taskTitle = value;
-                                });
-                            } else {
-                              await _dbHelper.updateTaskTitle(_taskId, value);
-                            }
-                            _descriptionFocus.requestFocus();
-                          }
-                        },
-                    controller: TextEditingController()..text = _taskTitle,
-                    decoration: const InputDecoration(
-                      hintText: "Enter task title",
-                      border: InputBorder.none,
-                    ),
-                    style: const TextStyle(
-                        fontSize: 26.0,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF211551),
-                        overflow: TextOverflow.ellipsis),
-                  ))
-                ],
+                        controller: _titleController,
+                        onFieldSubmitted: (_) =>
+                            _descriptionFocus.requestFocus(),
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        validator: (taskTitle) => taskTitle?.trim() == ""
+                            ? "Please enter a display name"
+                            : null,
+                        decoration: const InputDecoration(
+                          hintText: "Enter task title",
+                          border: InputBorder.none,
+                        ),
+                        style: const TextStyle(
+                          fontSize: 26.0,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF211551),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    )
+                  ],
+                ),
               ),
-            ),
-            Visibility(
-              visible: _contentVisible,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 12.0),
+              Visibility(
+                visible: widget.task?.id != null,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          "ID: ${widget.task?.id}",
+                          style: const TextStyle(
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                      InkWell(
+                        child: const Icon(
+                          Icons.copy,
+                        ),
+                        onTap: () async {
+                          await Clipboard.setData(
+                              ClipboardData(text: widget.task?.id ?? ""));
+                          Utils.showSnackBar(
+                              "ID copied to clipboard", Colors.green);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(
+                  bottom: 12.0,
+                ),
                 child: TextField(
                   focusNode: _descriptionFocus,
                   keyboardType: TextInputType.text,
                   maxLines: null,
-                  onSubmitted: (value) async {
-                    if (value != "") {
-                      if (_taskId != 0) {
-                        await _dbHelper.updateTaskDescription(_taskId, value);
-                        _taskDescription = value;
-                      }
-                    }
-                    _toDoFocus.requestFocus();
-                  },
-                  controller: TextEditingController()..text = _taskDescription,
+                  controller: _descController,
+                  onSubmitted: (_) => _toDoFocus.requestFocus(),
                   decoration: const InputDecoration(
-                      hintText: "Enter description for the task...",
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 24.0)),
+                    hintText: "Enter description for the task...",
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 24.0),
+                  ),
                 ),
               ),
-            ),
-            Visibility(
-              visible: _contentVisible,
-              child: Expanded(
-                child: FutureBuilder(
-                  future: _dbHelper.getToDos(_taskId),
-                  builder: (context, AsyncSnapshot<List<ToDo>> snapshot) {
-                    Widget child = Container();
-                    if (snapshot.hasData) {
-                      if ((snapshot.data ?? []).isNotEmpty) {
-                        child = ScrollConfiguration(
-                          behavior: NoGlowBehaviour(),
-                          child: ListView.builder(
-                              padding: const EdgeInsets.only(bottom: 20.0),
-                              itemCount: snapshot.data?.length,
-                              itemBuilder: (context, index) {
-                                return TodoWidget(
-                                  toDoId: snapshot.data?[index].id ?? 0,
-                                  text: snapshot.data?[index].title ?? "",
-                                  isDone: snapshot.data?[index].isDone == 0
-                                      ? false
-                                      : true,
-                                  updateToDoDone: _updateToDoDone,
-                                  updateToDoTitle: _updateToDoTitle,
-                                  deleteToDo: _deleteToDo,
-                                );
-                              }),
-                        );
-                      }
-                    }
-                    return child;
-                  },
+              Expanded(
+                child: ScrollConfiguration(
+                  behavior: NoGlowBehaviour(),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(
+                      bottom: 20.0,
+                    ),
+                    itemCount: _todos.length,
+                    itemBuilder: (context, index) {
+                      return TodoWidget(
+                        todo: _todos[index],
+                        updateToDo: _updateToDo,
+                        deleteToDo: _deleteToDo,
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
-            Visibility(
-              visible: _contentVisible,
-              child: Padding(
+              Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Row(
                   children: [
@@ -202,68 +217,91 @@ class _TaskpageState extends State<Taskpage> {
                       height: 20.0,
                       margin: const EdgeInsets.only(right: 12.0),
                       decoration: BoxDecoration(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(7.0),
-                          border: Border.all(
-                              color: const Color(0xFF86829D), width: 1.5)),
-                      child: const Icon(
-                        Icons.check,
-                        color: Colors.white,
-                        size: 20.0,
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(7.0),
+                        border: Border.all(
+                            color: const Color(0xFF86829D), width: 1.5),
                       ),
                     ),
                     Expanded(
-                        child: Padding(
-                      padding: const EdgeInsets.only(right: 60.0),
-                      child: TextField(
-                        focusNode: _toDoFocus,
-                        controller: TextEditingController()..text = "",
-                        onSubmitted: (value) async {
-                          // Check if the field is not empty
-                          if (value != "") {
-                            // Check if the task is null
-                            if (_taskId != 0) {
-                              ToDo newToDo = ToDo(
-                                  taskId: _taskId, title: value, isDone: 0);
-                              await _dbHelper.insertToDo(newToDo);
-                              setState(() {});
-                              _toDoFocus.requestFocus();
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 60.0),
+                        child: TextField(
+                          focusNode: _toDoFocus,
+                          controller: _toDoController,
+                          onSubmitted: (String value) {
+                            if (value.isNotEmpty) {
+                              setState(() {
+                                _todos.add({
+                                  "id": _todos.isNotEmpty
+                                      ? _todos.last["id"] + 1
+                                      : 1,
+                                  "title": value,
+                                  "done": false,
+                                });
+                                _toDoController.text = "";
+                                _toDoFocus.requestFocus();
+                              });
                             }
-                          }
-                        },
-                        decoration: const InputDecoration(
+                          },
+                          decoration: const InputDecoration(
                             hintText: "Enter ToDo item...",
-                            border: InputBorder.none),
+                            border: InputBorder.none,
+                          ),
+                        ),
                       ),
-                    )),
+                    ),
                   ],
                 ),
-              ),
-            )
-          ],
+              )
+            ],
+          ),
         ),
       ),
       floatingActionButton: AnimatedSlide(
         duration: const Duration(milliseconds: 300),
-        offset: _taskId != 0 ? Offset.zero : const Offset(3, 0),
+        offset: formKey.currentState?.validate() ?? true
+            ? Offset.zero
+            : const Offset(3, 0),
         child: FloatingActionButton(
           onPressed: () async {
-            if (_taskId != 0) {
-              _dbHelper.deleteTask(_taskId);
-              Navigator.pop(context);
+            if (widget.task == null) {
+              String taskId = await _firestoreService.createTask(
+                title: _titleController.text.trim(),
+                description: _descController.text.trim(),
+                todos: _todos,
+              );
+              await _firestoreService.updateUser(data: {
+                "tasks": FieldValue.arrayUnion([
+                  {
+                    "role": "ADMIN",
+                    "task_id": taskId,
+                  }
+                ])
+              });
+            } else {
+              await _firestoreService.updateTask(data: {
+                "id": widget.task?.id ?? "0",
+                "title": _titleController.text.trim(),
+                "description": _descController.text.trim(),
+                "todos": _todos,
+                "changelog": _changelog,
+              });
             }
+            if (!mounted) return;
+            Navigator.pop(context);
           },
           child: Container(
             width: 60.0,
             height: 60.0,
             decoration: BoxDecoration(
-              color: const Color(0xFFFE3577),
+              color: Colors.green,
               borderRadius: BorderRadius.circular(20.0),
             ),
             child: const Icon(
-              Icons.delete_forever,
+              Icons.save,
               color: Colors.white,
-              size: 40.0,
+              size: 30.0,
             ),
           ),
         ),
