@@ -318,7 +318,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                               child: Text(
                                 "Welcome ${snapshot.data?.name}!",
                                 style: const TextStyle(
-                                  fontSize: 24,
+                                  fontSize: 24.0,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
