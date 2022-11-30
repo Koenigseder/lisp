@@ -34,20 +34,108 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     return tasks.map((e) => e["task_id"].toString()).toList();
   }
 
-  Future _openDeleteDialog(String taskId) async {
+  Future _openContextDialog(String taskId) async {
     return showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Delete task"),
+        title: const Text("What to do want to do?"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ElevatedButton.icon(
+              onPressed: () {
+                _openLeaveDialog(taskId);
+              },
+              icon: const Icon(Icons.directions_run),
+              label: const Text("Leave this list"),
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                _openDeleteDialog(taskId);
+              },
+              icon: const Icon(Icons.delete),
+              label: const Text("Delete this list"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future _openLeaveDialog(String taskId) async {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Leave list"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: const [
             Text(
-              "Are you sure you want to delete this task?",
+              "Are you sure you want to leave this list?",
               textAlign: TextAlign.center,
             ),
             Text(
-              "This action cannot be undone!",
+              "With this action you will no longer have access to this list!\n"
+                  "You can rejoin the list with the ID.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14.0,
+                fontWeight: FontWeight.bold,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              if (!mounted) return;
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.directions_run),
+            label: const Text("Leave"),
+            onPressed: () async {
+              await _firestoreService.updateUser(data: {
+                "tasks": FieldValue.arrayRemove([
+                  {
+                    "role": "ADMIN",
+                    "task_id": taskId,
+                  }
+                ])
+              });
+              if (!mounted) return;
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future _openDeleteDialog(String taskId) async {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Delete list"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            Text(
+              "Are you sure you want to delete this list?",
+              textAlign: TextAlign.center,
+            ),
+            Text(
+              "This will delete the entire list for every user!\n"
+                  "This action cannot be undone!",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14.0,
@@ -69,14 +157,6 @@ class _HomePageWidgetState extends State<HomePageWidget> {
             icon: const Icon(Icons.delete),
             label: const Text("Delete"),
             onPressed: () async {
-              await _firestoreService.updateUser(data: {
-                "tasks": FieldValue.arrayRemove([
-                  {
-                    "role": "ADMIN",
-                    "task_id": taskId,
-                  }
-                ])
-              });
               await _firestoreService.deleteDoc(
                   collectionId: "tasks", docId: taskId);
               if (!mounted) return;
@@ -91,7 +171,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
     );
   }
 
-  Future _openDecisionDialog() {
+  Future _openAddDecisionDialog() {
     return showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -238,7 +318,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                               child: Text(
                                 "Welcome ${snapshot.data?.name}!",
                                 style: const TextStyle(
-                                  fontSize: 24,
+                                  fontSize: 24.0,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -254,7 +334,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                         key: Key("${Random().nextDouble()}"),
                         builder: (context, snapshot) {
                           Widget child = Container();
-                          if (snapshot.hasData && (snapshot.data ?? []).isNotEmpty) {
+                          if (!snapshot.hasData) return child;
+                          if ((snapshot.data ?? []).isNotEmpty) {
                             child = ScrollConfiguration(
                               behavior: NoGlowBehaviour(),
                               child: ListView.builder(
@@ -277,7 +358,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                       });
                                     },
                                     onLongPress: () {
-                                      _openDeleteDialog(task.id);
+                                      _openContextDialog(task.id);
                                     },
                                     child: TaskCardWidget(
                                       key: Key(task.id),
@@ -343,7 +424,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
         offset: Offset.zero,
         child: FloatingActionButton(
           onPressed: () {
-            _openDecisionDialog();
+            _openAddDecisionDialog();
           },
           child: Container(
             width: 60.0,
