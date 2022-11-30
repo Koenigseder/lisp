@@ -124,11 +124,22 @@ class _TaskpageState extends State<Taskpage> {
           ElevatedButton.icon(
             onPressed: () {
               if (!mounted) return;
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+            icon: const Icon(Icons.settings_backup_restore),
+            label: const Text("Discard changes"),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              if (!mounted) return;
               Navigator.pop(context);
               _titleFocus.requestFocus();
             },
-            icon: const Icon(Icons.title),
-            label: const Text("Continue"),
+            icon: const Icon(Icons.text_fields),
+            label: const Text("Add title"),
           ),
         ],
       ),
