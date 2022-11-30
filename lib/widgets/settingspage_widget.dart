@@ -88,6 +88,16 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                   key: formKey,
                   child: Column(
                     children: [
+                      const Padding(
+                        padding: EdgeInsets.only(top: 24.0, bottom: 24.0),
+                        child: Text(
+                          "Settings",
+                          style: TextStyle(
+                            fontSize: 24.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                       TextFormField(
                         controller: _displayNameController,
                         textInputAction: TextInputAction.done,
