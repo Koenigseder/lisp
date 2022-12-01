@@ -199,6 +199,7 @@ class _TaskpageState extends State<Taskpage> {
                           validator: (taskTitle) => taskTitle?.trim() == ""
                               ? "Please enter a display name"
                               : null,
+                          textCapitalization: TextCapitalization.sentences,
                           decoration: const InputDecoration(
                             hintText: "Enter task title",
                             border: InputBorder.none,
@@ -316,6 +317,7 @@ class _TaskpageState extends State<Taskpage> {
                                 });
                               }
                             },
+                            textCapitalization: TextCapitalization.sentences,
                             decoration: const InputDecoration(
                               hintText: "Enter ToDo item...",
                               border: InputBorder.none,
