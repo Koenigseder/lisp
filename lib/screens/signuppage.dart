@@ -109,6 +109,7 @@ class _SignUpPageState extends State<SignUpPage> {
               TextFormField(
                 controller: emailController,
                 textInputAction: TextInputAction.next,
+                keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(
                   labelText: "E-Mail",
                 ),
@@ -127,6 +128,7 @@ class _SignUpPageState extends State<SignUpPage> {
               TextFormField(
                 controller: displayNameController,
                 textInputAction: TextInputAction.next,
+                textCapitalization: TextCapitalization.sentences,
                 decoration: const InputDecoration(
                   labelText: "Display name",
                 ),
@@ -139,6 +141,7 @@ class _SignUpPageState extends State<SignUpPage> {
               TextFormField(
                 controller: passwordController,
                 textInputAction: TextInputAction.next,
+                keyboardType: TextInputType.visiblePassword,
                 decoration: const InputDecoration(
                   labelText: "Password",
                 ),
@@ -151,6 +154,7 @@ class _SignUpPageState extends State<SignUpPage> {
               TextFormField(
                 controller: confirmPasswordController,
                 textInputAction: TextInputAction.done,
+                keyboardType: TextInputType.visiblePassword,
                 decoration: const InputDecoration(
                   labelText: "Confirm password",
                 ),

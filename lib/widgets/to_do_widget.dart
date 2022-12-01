@@ -57,6 +57,7 @@ class _TodoWidgetState extends State<TodoWidget> {
                 widget.todo["title"] = value;
                 widget.updateToDo(widget.todo, false);
               },
+              textCapitalization: TextCapitalization.sentences,
               decoration: const InputDecoration(
                   hintText: "Please enter a text...", border: InputBorder.none),
             ),
