@@ -79,6 +79,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               ),
               TextFormField(
                 controller: emailController,
+                keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.done,
                 decoration: const InputDecoration(labelText: "E-Mail"),
                 autovalidateMode: AutovalidateMode.onUserInteraction,

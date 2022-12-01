@@ -101,6 +101,7 @@ class _SettingsPageWidgetState extends State<SettingsPageWidget> {
                       TextFormField(
                         controller: _displayNameController,
                         textInputAction: TextInputAction.done,
+                        textCapitalization: TextCapitalization.sentences,
                         decoration: const InputDecoration(
                           labelText: "Display name",
                         ),
