@@ -72,6 +72,7 @@ class _TaskpageState extends State<Taskpage> {
         title: _titleController.text.trim(),
         description: _descController.text.trim(),
         todos: _todos,
+        creationEpochTimestamp: DateTime.now().millisecondsSinceEpoch,
       );
       await _firestoreService.updateUser(data: {
         "tasks": FieldValue.arrayUnion([
