@@ -3,12 +3,14 @@ class FirestoreTask {
       {required this.id,
       required this.title,
       this.description,
+      required this.creationEpochTimestamp,
       this.todos,
       this.changelog});
 
   String id;
   String title;
   String? description;
+  int creationEpochTimestamp;
   List<dynamic>? todos;
   List<dynamic>? changelog;
 
@@ -17,6 +19,7 @@ class FirestoreTask {
       "id": id,
       "title": title,
       "description": description,
+      "creation_epoch_timestamp": creationEpochTimestamp,
       "todos": todos,
       "changelog": changelog,
     };
@@ -28,6 +31,7 @@ class FirestoreTask {
         id: "0",
         title: "Default task",
         description: "Default description",
+        creationEpochTimestamp: DateTime.now().millisecondsSinceEpoch,
         todos: [],
         changelog: [],
       );
@@ -37,6 +41,7 @@ class FirestoreTask {
       id: json["id"],
       title: json["title"],
       description: json["description"],
+      creationEpochTimestamp: json["creation_epoch_timestamp"],
       todos: json["todos"],
       changelog: json["changelog"],
     );
