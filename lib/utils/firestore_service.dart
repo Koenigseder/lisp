@@ -66,7 +66,8 @@ class FirestoreService {
 
     return FirebaseFirestore.instance
         .collection("tasks")
-        .where(FieldPath.documentId, whereIn: tasks)
+        .where("id", whereIn: tasks)
+        .orderBy("creation_epoch_timestamp", descending: false)
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => FirestoreTask.fromJson(doc.data()))
@@ -75,6 +76,7 @@ class FirestoreService {
 
   Future createTask({
     required String title,
+    required int creationEpochTimestamp,
     String? description,
     List<dynamic>? todos,
     List<dynamic>? changelog,
@@ -85,6 +87,7 @@ class FirestoreService {
       id: docTask.id,
       title: title,
       description: description,
+      creationEpochTimestamp: creationEpochTimestamp,
       todos: todos,
       changelog: changelog,
     );
@@ -122,4 +125,21 @@ class FirestoreService {
   }
 
   // End task methods
+
+  // Start config methods
+
+  Future<Map<String, dynamic>?> checkIfMaintenance() async {
+    Map<String, dynamic>? maintenanceData;
+
+    final docRef =
+        FirebaseFirestore.instance.collection("config").doc("maintenance");
+
+    await docRef.get().then((docSnapshot) {
+      maintenanceData = docSnapshot.data();
+    });
+
+    return maintenanceData;
+  }
+
+  // End config methods
 }

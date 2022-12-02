@@ -2,7 +2,10 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lisp/screens/mainpage.dart';
+import 'package:lisp/screens/service_unavailable_page.dart';
+import 'package:lisp/utils/firestore_service.dart';
 import 'package:lisp/utils/utils.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class VerifyEmailPage extends StatefulWidget {
   const VerifyEmailPage({Key? key}) : super(key: key);
@@ -12,9 +15,14 @@ class VerifyEmailPage extends StatefulWidget {
 }
 
 class _VerifyEmailPageState extends State<VerifyEmailPage> {
+  late int buildNumber;
+
   bool isEmailVerified = false;
   bool canResendEmail = false;
   Timer? timer;
+
+  Map<String, dynamic>? maintenanceData;
+  final _firestoreService = FirestoreService();
 
   Future sendVerificationEmail() async {
     try {
@@ -43,6 +51,14 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
   void initState() {
     super.initState();
 
+    PackageInfo.fromPlatform().then((PackageInfo packageInfo) {
+      buildNumber = int.parse(packageInfo.buildNumber);
+    });
+
+    _firestoreService.checkIfMaintenance().then((value) => setState(() {
+          maintenanceData = value;
+        }));
+
     isEmailVerified = FirebaseAuth.instance.currentUser!.emailVerified;
 
     if (!isEmailVerified) {
@@ -64,6 +80,13 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
 
   @override
   Widget build(BuildContext context) {
+    if ((maintenanceData?["active"] ?? false) &&
+        buildNumber < maintenanceData?["valid_build_number"]) {
+      return ServiceUnavailablePage(
+        data: maintenanceData,
+      );
+    }
+
     return isEmailVerified
         ? const Mainpage()
         : Scaffold(
