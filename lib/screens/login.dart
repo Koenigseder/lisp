@@ -2,8 +2,8 @@ import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:lisp/screens/forgotpasswordpage.dart';
-import 'package:lisp/utils/utils.dart';
+import 'package:lisp/screens/forgot_password.dart';
+import 'package:lisp/utils/snackbar.dart';
 
 import '../main.dart';
 
@@ -60,7 +60,7 @@ class _LoginPageState extends State<LoginPage> {
         password: passwordController.text.trim(),
       );
     } on FirebaseAuthException catch (e) {
-      Utils.showSnackBar(e.message, Colors.red);
+      Snackbar.showSnackBar(e.message, Colors.red);
     }
 
     navigatorKey.currentState!.popUntil((route) => route.isFirst);

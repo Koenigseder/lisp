@@ -1,7 +1,7 @@
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:lisp/utils/utils.dart';
+import 'package:lisp/utils/snackbar.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({Key? key}) : super(key: key);
@@ -27,11 +27,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       await FirebaseAuth.instance
           .sendPasswordResetEmail(email: emailController.text.trim());
 
-      Utils.showSnackBar("E-Mail sent!", Colors.green);
+      Snackbar.showSnackBar("E-Mail sent!", Colors.green);
       if (!mounted) return;
       Navigator.of(context).popUntil((route) => route.isFirst);
     } on FirebaseAuthException catch (e) {
-      Utils.showSnackBar(e.message, Colors.red);
+      Snackbar.showSnackBar(e.message, Colors.red);
       Navigator.of(context).pop();
     }
   }

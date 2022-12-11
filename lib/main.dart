@@ -2,9 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lisp/screens/authpage.dart';
-import 'package:lisp/screens/verifyemailpage.dart';
-import 'package:lisp/utils/utils.dart';
+import 'package:lisp/screens/auth.dart';
+import 'package:lisp/screens/verify_email.dart';
+import 'package:lisp/utils/snackbar.dart';
 
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       navigatorKey: navigatorKey,
-      scaffoldMessengerKey: Utils.messengerKey,
+      scaffoldMessengerKey: Snackbar.messengerKey,
       theme: ThemeData(
         primarySwatch: MaterialColor(0xFF643FDB, color),
         textTheme: GoogleFonts.nunitoTextTheme(
