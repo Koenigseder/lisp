@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:lisp/utils/firestore_service.dart';
 
 import '../main.dart';
-import '../utils/utils.dart';
+import '../utils/snackbar.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({Key? key, required this.onClickedSignIn}) : super(key: key);
@@ -77,7 +77,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
       firestoreService.createUser(name: displayNameController.text.trim());
     } on FirebaseAuthException catch (e) {
-      Utils.showSnackBar(e.message, Colors.red);
+      Snackbar.showSnackBar(e.message, Colors.red);
     }
 
     navigatorKey.currentState!.popUntil((route) => route.isFirst);

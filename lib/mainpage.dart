@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:lisp/widgets/homepage_wigdet.dart';
-import 'package:lisp/widgets/settingspage_widget.dart';
+import 'package:lisp/screens/home.dart';
+import 'package:lisp/screens/settings.dart';
 
-class Mainpage extends StatefulWidget {
-  const Mainpage({Key? key}) : super(key: key);
+class MainPage extends StatefulWidget {
+  const MainPage({Key? key}) : super(key: key);
 
   @override
-  State<Mainpage> createState() => _MainpageState();
+  State<MainPage> createState() => _MainPageState();
 }
 
-class _MainpageState extends State<Mainpage> {
+class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
 
   static const List<Widget> _widgetOptions = [
-    HomePageWidget(),
-    SettingsPageWidget(),
+    HomePage(),
+    SettingsPage(),
   ];
 
   void _onItemTapped(int index) {

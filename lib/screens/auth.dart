@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:lisp/screens/loginpage.dart';
-import 'package:lisp/screens/signuppage.dart';
+import 'package:lisp/screens/login.dart';
+import 'package:lisp/screens/signup.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({Key? key}) : super(key: key);

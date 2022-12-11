@@ -6,18 +6,18 @@ import 'package:lisp/models/firestore_task.dart';
 import 'package:lisp/models/firestore_user.dart';
 import 'package:lisp/utils/firestore_service.dart';
 
-import '../screens/taskpage.dart';
+import 'task.dart';
 import '../utils/no_glow_behavior.dart';
-import 'task_card_widget.dart';
+import '../widgets/task_card_widget.dart';
 
-class HomePageWidget extends StatefulWidget {
-  const HomePageWidget({Key? key}) : super(key: key);
+class HomePage extends StatefulWidget {
+  const HomePage({Key? key}) : super(key: key);
 
   @override
-  State<HomePageWidget> createState() => _HomePageWidgetState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageWidgetState extends State<HomePageWidget> {
+class _HomePageState extends State<HomePage> {
   final FirestoreService _firestoreService = FirestoreService();
 
   final TextEditingController _idController = TextEditingController();
@@ -186,7 +186,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const Taskpage(task: null),
+                    builder: (context) => const TaskPage(task: null),
                   ),
                 ).then((value) {
                   setState(() {});
@@ -349,7 +349,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) => Taskpage(
+                                          builder: (context) => TaskPage(
                                             task: task,
                                           ),
                                         ),
