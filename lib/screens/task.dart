@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lisp/models/firestore_task.dart';
-import 'package:lisp/utils/firestore_service.dart';
+import 'package:lisp/services/firestore_service.dart';
 import 'package:lisp/utils/snackbar.dart';
 
 import '../utils/no_glow_behavior.dart';
