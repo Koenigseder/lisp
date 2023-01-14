@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class Utils {
+class Snackbar {
   static final messengerKey = GlobalKey<ScaffoldMessengerState>();
 
   static showSnackBar(String? text, Color color) {

@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:lisp/screens/mainpage.dart';
-import 'package:lisp/screens/service_unavailable_page.dart';
-import 'package:lisp/utils/firestore_service.dart';
-import 'package:lisp/utils/utils.dart';
+import 'package:lisp/mainpage.dart';
+import 'package:lisp/screens/service_unavailable.dart';
+import 'package:lisp/services/firestore_service.dart';
+import 'package:lisp/utils/snackbar.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class VerifyEmailPage extends StatefulWidget {
@@ -33,7 +33,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
       await Future.delayed(const Duration(seconds: 5));
       setState(() => canResendEmail = true);
     } on FirebaseAuthException catch (e) {
-      Utils.showSnackBar(e.message, Colors.red);
+      Snackbar.showSnackBar(e.message, Colors.red);
     }
   }
 
@@ -88,7 +88,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
     }
 
     return isEmailVerified
-        ? const Mainpage()
+        ? const MainPage()
         : Scaffold(
             appBar: AppBar(
               title: const Text("Verify E-Mail"),

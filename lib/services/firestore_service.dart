@@ -17,7 +17,7 @@ class FirestoreService {
         .map((snapshot) => FirestoreUser.fromJson(snapshot.data()!));
   }
 
-  Future createUser({required String name}) async {
+  Future<void> createUser({required String name}) async {
     final docUser = FirebaseFirestore.instance
         .collection("users")
         .doc(FirebaseAuth.instance.currentUser!.uid);
@@ -37,7 +37,7 @@ class FirestoreService {
     await docUser.set(json);
   }
 
-  Future updateUser({required Map<String, dynamic> data}) async {
+  Future<void> updateUser({required Map<String, dynamic> data}) async {
     final docUser = FirebaseFirestore.instance
         .collection("users")
         .doc(FirebaseAuth.instance.currentUser!.uid);
@@ -49,12 +49,27 @@ class FirestoreService {
     // Delete field: "<field_name>": FieldValue.delete()
   }
 
-  Future deleteDoc(
+  Future<void> deleteDoc(
       {required String collectionId, required String docId}) async {
     final docRef =
         FirebaseFirestore.instance.collection(collectionId).doc(docId);
 
     await docRef.delete();
+  }
+
+  Future<void> deleteUnavailableTasks(List<String> taskIds) async {
+    for (String taskId in taskIds) {
+      if (!await checkIfTaskExists(taskId)) {
+        updateUser(data: {
+          "tasks": FieldValue.arrayRemove([
+            {
+              "role": "ADMIN",
+              "task_id": taskId,
+            }
+          ])
+        });
+      }
+    }
   }
 
   // End user methods
@@ -74,7 +89,7 @@ class FirestoreService {
             .toList());
   }
 
-  Future createTask({
+  Future<String> createTask({
     required String title,
     required int creationEpochTimestamp,
     String? description,
@@ -99,7 +114,7 @@ class FirestoreService {
     return docTask.id;
   }
 
-  Future updateTask({required Map<String, dynamic> data}) async {
+  Future<void> updateTask({required Map<String, dynamic> data}) async {
     final docUser =
         FirebaseFirestore.instance.collection("tasks").doc(data["id"]);
 
@@ -141,5 +156,5 @@ class FirestoreService {
     return maintenanceData;
   }
 
-  // End config methods
+// End config methods
 }

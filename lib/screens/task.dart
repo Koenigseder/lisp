@@ -2,22 +2,22 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lisp/models/firestore_task.dart';
-import 'package:lisp/utils/firestore_service.dart';
-import 'package:lisp/utils/utils.dart';
+import 'package:lisp/services/firestore_service.dart';
+import 'package:lisp/utils/snackbar.dart';
 
 import '../utils/no_glow_behavior.dart';
 import '../widgets/to_do_widget.dart';
 
-class Taskpage extends StatefulWidget {
-  const Taskpage({Key? key, required this.task}) : super(key: key);
+class TaskPage extends StatefulWidget {
+  const TaskPage({Key? key, required this.task}) : super(key: key);
 
   final FirestoreTask? task;
 
   @override
-  State<Taskpage> createState() => _TaskpageState();
+  State<TaskPage> createState() => _TaskPageState();
 }
 
-class _TaskpageState extends State<Taskpage> {
+class _TaskPageState extends State<TaskPage> {
   final FirestoreService _firestoreService = FirestoreService();
 
   final TextEditingController _titleController = TextEditingController();
@@ -239,7 +239,7 @@ class _TaskpageState extends State<Taskpage> {
                           onTap: () async {
                             await Clipboard.setData(
                                 ClipboardData(text: widget.task?.id ?? ""));
-                            Utils.showSnackBar(
+                            Snackbar.showSnackBar(
                                 "ID copied to clipboard", Colors.green);
                           },
                         ),
