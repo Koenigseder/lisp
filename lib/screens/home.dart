@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:lisp/models/firestore_task.dart';
 import 'package:lisp/models/firestore_user.dart';
-import 'package:lisp/utils/firestore_service.dart';
+import 'package:lisp/services/firestore_service.dart';
 
 import 'task.dart';
 import '../utils/no_glow_behavior.dart';
@@ -22,6 +22,8 @@ class _HomePageState extends State<HomePage> {
 
   final TextEditingController _idController = TextEditingController();
 
+  List<String> taskIds = [];
+
   List<int> countToDos(FirestoreTask task) {
     int toDos = task.todos?.length ?? 0;
     int toDosDone = task.todos?.where((element) => element["done"]).length ?? 0;
@@ -30,8 +32,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   List<String> getTaskIds(List<dynamic>? tasks) {
-    if (tasks == null) return [];
-    return tasks.map((e) => e["task_id"].toString()).toList();
+    if (tasks == null) {
+      taskIds = [];
+      return [];
+    }
+
+    List<String> ids = tasks.map((e) => e["task_id"].toString()).toList();
+    taskIds = ids;
+
+    _firestoreService.deleteUnavailableTasks(ids);
+
+    return ids;
   }
 
   Future _openContextDialog(String taskId) async {
@@ -79,7 +90,7 @@ class _HomePageState extends State<HomePage> {
             ),
             Text(
               "With this action you will no longer have access to this list!\n"
-                  "You can rejoin the list with the ID.",
+              "You can rejoin the list with the ID.",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14.0,
@@ -135,7 +146,7 @@ class _HomePageState extends State<HomePage> {
             ),
             Text(
               "This will delete the entire list for every user!\n"
-                  "This action cannot be undone!",
+              "This action cannot be undone!",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14.0,
@@ -159,8 +170,10 @@ class _HomePageState extends State<HomePage> {
             onPressed: () async {
               await _firestoreService.deleteDoc(
                   collectionId: "tasks", docId: taskId);
-              if (!mounted) return;
-              Navigator.of(context).popUntil((route) => route.isFirst);
+              setState(() {
+                if (!mounted) return;
+                Navigator.of(context).popUntil((route) => route.isFirst);
+              });
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
@@ -179,26 +192,43 @@ class _HomePageState extends State<HomePage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ElevatedButton.icon(
-              onPressed: () {
-                if (!mounted) return;
-                Navigator.of(context).popUntil((route) => route.isFirst);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const TaskPage(task: null),
+            taskIds.length < 10
+                ? Container()
+                : const Padding(
+                    padding: EdgeInsets.only(bottom: 8.0),
+                    child: Text(
+                      "You can only add 10 lists at the moment 😢",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                ).then((value) {
-                  setState(() {});
-                });
-              },
+            ElevatedButton.icon(
+              onPressed: taskIds.length < 10
+                  ? () {
+                      if (!mounted) return;
+                      Navigator.of(context).popUntil((route) => route.isFirst);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TaskPage(task: null),
+                        ),
+                      ).then((value) {
+                        setState(() {});
+                      });
+                    }
+                  : null,
               icon: const Icon(Icons.list_rounded),
               label: const Text("Create a new list"),
             ),
             ElevatedButton.icon(
-              onPressed: () {
-                _openAddListDialog();
-              },
+              onPressed: taskIds.length < 10
+                  ? () {
+                      _openAddListDialog();
+                    }
+                  : null,
               icon: const Icon(Icons.person_add),
               label: const Text("Join a list"),
             ),

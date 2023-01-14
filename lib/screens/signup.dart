@@ -2,7 +2,7 @@ import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:lisp/utils/firestore_service.dart';
+import 'package:lisp/services/firestore_service.dart';
 
 import '../main.dart';
 import '../utils/snackbar.dart';
