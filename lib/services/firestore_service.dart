@@ -24,12 +24,7 @@ class FirestoreService {
 
     final firestoreUser = FirestoreUser(
       name: name,
-      tasks: [
-        {
-          "role": "ADMIN",
-          "task_id": "DUMMY", // Needed to display right dialogs
-        }
-      ],
+      tasks: [],
     );
 
     final json = firestoreUser.toJson();
