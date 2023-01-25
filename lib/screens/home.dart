@@ -318,7 +318,7 @@ class _HomePageState extends State<HomePage> {
             stream: _firestoreService.readUser(),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
-                return const Text("Something went wrong!");
+                return const Text("Something went wrong! Try resetting the app... 😥");
               }
               if (!snapshot.hasData) {
                 return Container();
@@ -364,7 +364,7 @@ class _HomePageState extends State<HomePage> {
                         key: Key("${Random().nextDouble()}"),
                         builder: (context, snapshot) {
                           Widget child = Container();
-                          if (!snapshot.hasData) return child;
+                          if (snapshot.connectionState == ConnectionState.waiting) return child;
                           if ((snapshot.data ?? []).isNotEmpty) {
                             child = ScrollConfiguration(
                               behavior: NoGlowBehaviour(),
@@ -423,7 +423,7 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                     ),
                                     Text(
-                                      "So far there are no tasks",
+                                      "So far there are no lists",
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 20.0,
@@ -431,7 +431,8 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                     ),
                                     Text(
-                                      "Start by creating one in the right bottom corner",
+                                      "Start by creating or joining one in the right bottom corner",
+                                      textAlign: TextAlign.center,
                                     )
                                   ],
                                 ),

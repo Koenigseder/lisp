@@ -72,7 +72,7 @@ class _SettingsPageState extends State<SettingsPage> {
             stream: _firestoreService.readUser(),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
-                return const Text("Something went wrong!");
+                return const Text("Something went wrong! Try resetting the app... 😥");
               }
               if (!snapshot.hasData) {
                 return Container();
