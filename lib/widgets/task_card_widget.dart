@@ -26,22 +26,25 @@ class TaskCardWidget extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: Text(title ?? "(Unnamed task)",
-                    style: const TextStyle(
-                        color: Color(0xFF211551),
-                        fontSize: 22.0,
-                        fontWeight: FontWeight.bold)),
+                child: Text(
+                  title ?? "(Unnamed task)",
+                  style: const TextStyle(
+                      color: Color(0xFF211551),
+                      fontSize: 22.0,
+                      fontWeight: FontWeight.bold),
+                ),
               ),
               Visibility(
                 visible: toDos! > 0,
                 child: Padding(
                   padding: const EdgeInsets.only(left: 8.0),
-                  child: SizedBox(
-                    height: 40.0,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Center(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Center(
+                        child: SizedBox(
+                          width: 52.0,
+                          height: 52.0,
                           child: CircularProgressIndicator(
                             value: toDosDone! / toDos!,
                             color: toDosDone! / toDos! < 0.5
@@ -54,16 +57,17 @@ class TaskCardWidget extends StatelessWidget {
                                 : Colors.white,
                           ),
                         ),
-                        Center(
-                          child: toDosDone! / toDos! != 1
-                              ? Text("$toDosDone / $toDos")
-                              : const Icon(
-                                  Icons.check,
-                                  color: Colors.green,
-                                ),
-                        )
-                      ],
-                    ),
+                      ),
+                      Center(
+                        child: toDosDone! / toDos! != 1
+                            ? Text("$toDosDone / $toDos")
+                            : const Icon(
+                                Icons.check,
+                                color: Colors.green,
+                                size: 35.0,
+                              ),
+                      )
+                    ],
                   ),
                 ),
               )
