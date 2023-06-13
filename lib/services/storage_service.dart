@@ -21,6 +21,6 @@ class StorageService {
   }
 
   String getAvatarString(String avatarString) {
-    return randomAvatarString(avatarString);
+    return RandomAvatarString(avatarString);
   }
 }
