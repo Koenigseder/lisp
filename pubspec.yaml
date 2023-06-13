@@ -37,10 +37,14 @@ dependencies:
   # Firebase
   firebase_auth: ^4.1.3
   cloud_firestore: ^4.1.0
+  firebase_storage: ^11.2.2
 
   sqflite:
   path:
   package_info_plus: ^1.4.3+1
+  file_picker:
+  random_avatar:
+  flutter_svg:
 
 dev_dependencies:
   flutter_test:
