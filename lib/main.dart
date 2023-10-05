@@ -1,14 +1,29 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lisp/screens/auth.dart';
 import 'package:lisp/screens/verify_email.dart';
+import 'package:lisp/services/push_service.dart';
 import 'package:lisp/utils/snackbar.dart';
 
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+
+  // Notifications
+  await firebaseMessagingRequestNotificationPermission();
+
+  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  FirebaseMessaging.onMessage
+      .listen((RemoteMessage msg) => firebaseMessagingForegroundHandler(msg));
 
   runApp(const MyApp());
 }
