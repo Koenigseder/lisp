@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:lisp/screens/home.dart';
 import 'package:lisp/screens/settings.dart';
+import 'package:lisp/services/firestore_service.dart';
+import 'package:lisp/services/push_service.dart';
 import 'package:lisp/services/storage_service.dart';
 
 class MainPage extends StatefulWidget {
@@ -17,6 +19,8 @@ class _MainPageState extends State<MainPage> {
 
   final StorageService _storageService = StorageService();
 
+  String profilePicturePath = "";
+
   static const List<Widget> _widgetOptions = [
     HomePage(),
     SettingsPage(),
@@ -26,6 +30,37 @@ class _MainPageState extends State<MainPage> {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  void updateProfilePicturePath() {
+    _storageService
+        .getProfilePictureURL(FirebaseAuth.instance.currentUser!.uid)
+        .then((value) {
+      setState(() {
+        profilePicturePath = value;
+      });
+    });
+  }
+
+  Future<void> getTaskIds(Stream<dynamic> user) async {
+    await for (final props in user) {
+    List<String> tasks = [];
+      for (final task in props.tasks) {
+        tasks.add(task["task_id"]);
+      }
+
+      subscribeToTopics(tasks);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    updateProfilePicturePath();
+
+    final firestore = FirestoreService();
+    getTaskIds(firestore.readUser());
   }
 
   @override
@@ -47,9 +82,7 @@ class _MainPageState extends State<MainPage> {
               backgroundColor: Colors.transparent,
               child: ClipOval(
                 child: Image.network(
-                  _storageService.getProfilePictureURL(
-                    FirebaseAuth.instance.currentUser!.uid,
-                  ),
+                  profilePicturePath,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Center(
@@ -58,6 +91,12 @@ class _MainPageState extends State<MainPage> {
                           FirebaseAuth.instance.currentUser!.uid,
                         ),
                       ),
+                    );
+                  },
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return const Center(
+                      child: CircularProgressIndicator(),
                     );
                   },
                 ),

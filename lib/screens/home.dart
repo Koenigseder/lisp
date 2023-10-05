@@ -1,6 +1,8 @@
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:lisp/models/firestore_task.dart';
 import 'package:lisp/models/firestore_user.dart';
@@ -21,6 +23,7 @@ class _HomePageState extends State<HomePage> {
   final FirestoreService _firestoreService = FirestoreService();
 
   final TextEditingController _idController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
 
   List<String> taskIds = [];
 
@@ -81,9 +84,9 @@ class _HomePageState extends State<HomePage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Leave list"),
-        content: Column(
+        content: const Column(
           mainAxisSize: MainAxisSize.min,
-          children: const [
+          children: [
             Text(
               "Are you sure you want to leave this list?",
               textAlign: TextAlign.center,
@@ -137,9 +140,9 @@ class _HomePageState extends State<HomePage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Delete list"),
-        content: Column(
+        content: const Column(
           mainAxisSize: MainAxisSize.min,
-          children: const [
+          children: [
             Text(
               "Are you sure you want to delete this list?",
               textAlign: TextAlign.center,
@@ -208,16 +211,7 @@ class _HomePageState extends State<HomePage> {
             ElevatedButton.icon(
               onPressed: taskIds.length < 10
                   ? () {
-                      if (!mounted) return;
-                      Navigator.of(context).popUntil((route) => route.isFirst);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const TaskPage(task: null),
-                        ),
-                      ).then((value) {
-                        setState(() {});
-                      });
+                      _openAddNewListDialog();
                     }
                   : null,
               icon: const Icon(Icons.list_rounded),
@@ -309,6 +303,97 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Future _openAddNewListDialog() {
+    _titleController.text = "";
+    final formKey = GlobalKey<FormState>();
+
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Create a new list"),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("Enter a new title:"),
+              TextFormField(
+                  controller: _titleController,
+                  textInputAction: TextInputAction.done,
+                  decoration: const InputDecoration(
+                    labelText: "List title",
+                  ),
+                  validator: (value) {
+                    if (value?.trim() == "") return "Please provide an title";
+                    return null;
+                  })
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              if (!mounted) return;
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.add),
+            label: const Text("Create"),
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                String taskId = await _firestoreService.createTask(
+                    title: _titleController.text.trim(),
+                    description: "",
+                    todos: [],
+                    creationEpochTimestamp:
+                        DateTime.now().millisecondsSinceEpoch,
+                    changelog: [
+                      {
+                        "change": "create_task",
+                        "timestamp": DateTime.now().millisecondsSinceEpoch,
+                        "by": FirebaseAuth.instance.currentUser!.uid,
+                      },
+                    ]);
+
+                await _firestoreService.updateUser(data: {
+                  "tasks": FieldValue.arrayUnion([
+                    {
+                      "role": "ADMIN",
+                      "task_id": taskId,
+                    }
+                  ])
+                });
+
+                if (!mounted) return;
+
+                FirestoreTask newTask = FirestoreTask(
+                  id: taskId,
+                  title: _titleController.text.trim(),
+                  creationEpochTimestamp: DateTime.now().millisecondsSinceEpoch,
+                );
+
+                Navigator.of(context).popUntil((route) => route.isFirst);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TaskPage(task: newTask),
+                  ),
+                );
+              } else {
+                formKey.currentState!.validate();
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -318,7 +403,12 @@ class _HomePageState extends State<HomePage> {
             stream: _firestoreService.readUser(),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
-                return const Text("Something went wrong! Try resetting the app... 😥");
+                if (kDebugMode) {
+                  print(snapshot.error);
+                }
+
+                return const Text(
+                    "Something went wrong! Try resetting the app... 😥");
               }
               if (!snapshot.hasData) {
                 return Container();
@@ -331,7 +421,10 @@ class _HomePageState extends State<HomePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      margin: const EdgeInsets.only(top: 32.0, bottom: 32.0),
+                      margin: const EdgeInsets.only(
+                        top: 32.0,
+                        bottom: 32.0,
+                      ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -344,13 +437,14 @@ class _HomePageState extends State<HomePage> {
                           Expanded(
                             child: Padding(
                               padding:
-                                  const EdgeInsets.symmetric(horizontal: 8.0),
+                                  const EdgeInsets.symmetric(horizontal: 12.0),
                               child: Text(
                                 "Welcome ${snapshot.data?.name}!",
                                 style: const TextStyle(
                                   fontSize: 24.0,
                                   fontWeight: FontWeight.bold,
                                 ),
+                                textAlign: TextAlign.center,
                               ),
                             ),
                           ),
@@ -364,7 +458,8 @@ class _HomePageState extends State<HomePage> {
                         key: Key("${Random().nextDouble()}"),
                         builder: (context, snapshot) {
                           Widget child = Container();
-                          if (snapshot.connectionState == ConnectionState.waiting) return child;
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) return child;
                           if ((snapshot.data ?? []).isNotEmpty) {
                             child = ScrollConfiguration(
                               behavior: NoGlowBehaviour(),
@@ -402,12 +497,12 @@ class _HomePageState extends State<HomePage> {
                               ),
                             );
                           } else {
-                            child = Padding(
-                              padding: const EdgeInsets.only(bottom: 150.0),
+                            child = const Padding(
+                              padding: EdgeInsets.only(bottom: 150.0),
                               child: Center(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
+                                  children: [
                                     Image(
                                       width: 200.0,
                                       image:

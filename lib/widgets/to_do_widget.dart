@@ -1,22 +1,63 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 class TodoWidget extends StatefulWidget {
-  TodoWidget({
+  const TodoWidget({
     Key? key,
     required this.todo,
     required this.updateToDo,
     required this.deleteToDo,
+    required this.addRemoveTaskIdToChangedList,
   }) : super(key: key);
 
-  Map<String, dynamic> todo;
+  final Map<String, dynamic> todo;
   final Function updateToDo;
   final Function deleteToDo;
+  final Function addRemoveTaskIdToChangedList;
 
   @override
   State<TodoWidget> createState() => _TodoWidgetState();
 }
 
 class _TodoWidgetState extends State<TodoWidget> {
+  final TextEditingController _titleController = TextEditingController();
+
+  bool textFieldValueChanged = false;
+
+  Timer _scheduleTimer(int milliseconds, VoidCallback handleFunction) {
+    return Timer(Duration(milliseconds: milliseconds), handleFunction);
+  }
+
+  void _updateToDo() {
+    if (_titleController.text.isNotEmpty) {
+      if (_titleController.text != widget.todo["title"]) {
+        widget.todo["title"] = _titleController.text;
+        widget.updateToDo(widget.todo, false);
+      }
+
+      setState(() {
+        widget.addRemoveTaskIdToChangedList(
+            widget.todo["id"], "remove");
+        textFieldValueChanged = false;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _titleController.text = widget.todo["title"];
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    _titleController.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -52,10 +93,20 @@ class _TodoWidgetState extends State<TodoWidget> {
           ),
           Expanded(
             child: TextField(
-              controller: TextEditingController()..text = widget.todo["title"],
+              key: Key(widget.todo["id"].toString()),
+              controller: _titleController,
+              onEditingComplete: () {
+                _updateToDo();
+              },
               onChanged: (String value) {
-                widget.todo["title"] = value;
-                widget.updateToDo(widget.todo, false);
+                if (!textFieldValueChanged) {
+                  setState(() {
+                    widget.addRemoveTaskIdToChangedList(
+                        widget.todo["id"], "add");
+                    textFieldValueChanged = true;
+                  });
+                }
+                _scheduleTimer(3000, _updateToDo);
               },
               textCapitalization: TextCapitalization.sentences,
               decoration: const InputDecoration(
@@ -64,12 +115,20 @@ class _TodoWidgetState extends State<TodoWidget> {
           ),
           InkWell(
             onTap: () {
-              widget.deleteToDo(widget.todo["id"]);
+              if (!textFieldValueChanged) {
+                widget.deleteToDo(widget.todo);
+              } else if (_titleController.text.isNotEmpty) {
+                widget.todo["title"] = _titleController.text;
+                widget.updateToDo(widget.todo, false);
+                widget.addRemoveTaskIdToChangedList(
+                    widget.todo["id"], "remove");
+                textFieldValueChanged = false;
+              }
             },
             customBorder: const CircleBorder(),
-            child: const Icon(
-              Icons.delete,
-              color: Colors.red,
+            child: Icon(
+              !textFieldValueChanged ? Icons.delete : Icons.save,
+              color: !textFieldValueChanged ? Colors.red : Colors.green,
             ),
           )
         ],
