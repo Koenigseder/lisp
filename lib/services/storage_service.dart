@@ -6,8 +6,9 @@ import 'package:random_avatar/random_avatar.dart';
 class StorageService {
   final storage = FirebaseStorage.instance;
 
-  String getProfilePictureURL(String uid) {
-    return "https://firebasestorage.googleapis.com/v0/b/lisp-882b0.appspot.com/o/profilePictures%2F$uid.jpg?alt=media";
+  Future<String> getProfilePictureURL(String uid) async {
+    final ref = storage.ref().child("/profilePictures/$uid.jpg");
+    return await ref.getDownloadURL();
   }
 
   Future uploadFile(String path, File file) async {

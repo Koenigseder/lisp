@@ -59,6 +59,8 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
           maintenanceData = value;
         }));
 
+    FirebaseAuth.instance.currentUser!.reload();
+
     isEmailVerified = FirebaseAuth.instance.currentUser!.emailVerified;
 
     if (!isEmailVerified) {
@@ -66,7 +68,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
 
       timer = Timer.periodic(
         const Duration(seconds: 3),
-        (_) => checkEmailVerified(),
+            (_) => checkEmailVerified(),
       );
     }
   }
