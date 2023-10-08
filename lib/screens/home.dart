@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:lisp/models/firestore_task.dart';
 import 'package:lisp/models/firestore_user.dart';
 import 'package:lisp/services/firestore_service.dart';
+import 'package:lisp/services/push_service.dart';
 
 import 'task.dart';
 import '../utils/no_glow_behavior.dart';
@@ -123,6 +124,9 @@ class _HomePageState extends State<HomePage> {
                   }
                 ])
               });
+
+              await unsubscribeFromTopic(taskId);
+
               if (!mounted) return;
               Navigator.of(context).popUntil((route) => route.isFirst);
             },

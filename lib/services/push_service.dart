@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -47,6 +49,9 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   RemoteNotification? notification = message.notification;
 
   if (notification == null) {
+    await Firebase.initializeApp();
+    if (message.data["by"] == FirebaseAuth.instance.currentUser!.uid) return;
+
     flutterLocalNotificationsPlugin.show(
         message.hashCode,
         message.data["title"],
@@ -68,6 +73,8 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void firebaseMessagingForegroundHandler(RemoteMessage message) {
   RemoteNotification? notification = message.notification;
+
+  if (message.data["by"] == FirebaseAuth.instance.currentUser!.uid) return;
 
   flutterLocalNotificationsPlugin.show(
       message.hashCode,
@@ -97,4 +104,10 @@ Future<void> subscribeToTopics(List<String> topics) async {
       print("Subscribed to $topic");
     }
   }
+}
+
+Future<void> unsubscribeFromTopic(String topic) async {
+  final messagingInstance = FirebaseMessaging.instance;
+
+  messagingInstance.unsubscribeFromTopic(topic);
 }
