@@ -25,6 +25,7 @@ class FirestoreService {
     final firestoreUser = FirestoreUser(
       name: name,
       tasks: [],
+      fcm: [],
     );
 
     final json = firestoreUser.toJson();
@@ -53,18 +54,18 @@ class FirestoreService {
   }
 
   Future<void> deleteUnavailableTasks(List<String> taskIds) async {
+    List<Map> unavailableTasks = [];
+
     for (String taskId in taskIds) {
       if (!await checkIfTaskExists(taskId)) {
-        updateUser(data: {
-          "tasks": FieldValue.arrayRemove([
-            {
-              "role": "ADMIN",
-              "task_id": taskId,
-            }
-          ])
+        unavailableTasks.add({
+          "role": "ADMIN",
+          "task_id": taskId,
         });
       }
     }
+
+    await updateUser(data: {"tasks": FieldValue.arrayRemove(unavailableTasks)});
   }
 
   // End user methods
@@ -82,6 +83,16 @@ class FirestoreService {
         .map((snapshot) => snapshot.docs
             .map((doc) => FirestoreTask.fromJson(doc.data()))
             .toList());
+  }
+
+  Stream<FirestoreTask> getSingleTask(String? taskId) {
+    if (taskId == "" || taskId == null) return const Stream.empty();
+
+    return FirebaseFirestore.instance
+        .collection("tasks")
+        .doc(taskId)
+        .snapshots()
+        .map((snapshot) => FirestoreTask.fromJson(snapshot.data()));
   }
 
   Future<String> createTask({
